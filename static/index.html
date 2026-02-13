@@ -1,0 +1,1502 @@
+<!DOCTYPE html>
+<html lang="en" class="bg-[#0B0F19] mesh-bg">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cortana Dashboard</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+    
+    <style>
+        * {
+            font-family: 'Inter', sans-serif;
+        }
+        
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        
+        body {
+            background: #0B0F19;
+        }
+        
+        /* Animated mesh background */
+        .mesh-bg::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 50%, rgba(0, 212, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 20%, rgba(123, 97, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 80%, rgba(0, 230, 118, 0.03) 0%, transparent 50%);
+            z-index: 0;
+            pointer-events: none;
+            animation: meshFloat 20s ease-in-out infinite;
+        }
+
+        @keyframes meshFloat {
+            0%, 100% { transform: translate(0, 0); }
+            33% { transform: translate(-10px, 10px); }
+            66% { transform: translate(10px, -10px); }
+        }
+
+        /* Gradient text */
+        .gradient-text {
+            background: linear-gradient(135deg, #00D4FF, #7B61FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        /* Gradient left border for cards */
+        .gradient-border-left {
+            border-left: 3px solid;
+            border-image: linear-gradient(to bottom, #00D4FF, #7B61FF) 1;
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, rgba(42,49,80,0.3) 25%, rgba(42,49,80,0.6) 50%, rgba(42,49,80,0.3) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes skeleton-shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        /* Nav glow */
+        .nav-item-active {
+            border-left: 3px solid #00D4FF;
+            background: rgba(0, 212, 255, 0.08);
+            box-shadow: inset 3px 0 12px rgba(0, 212, 255, 0.1);
+            color: #00D4FF !important;
+        }
+        
+        /* Glassmorphism cards */
+        .glass-card {
+            background: rgba(17, 24, 39, 0.8);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 1px solid rgba(56, 68, 107, 0.4);
+            border-radius: 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .glass-card:hover {
+            border-color: rgba(0, 212, 255, 0.3);
+            box-shadow: 0 8px 32px rgba(0, 212, 255, 0.06);
+            transform: translateY(-1px);
+        }
+        
+        .glass-sidebar {
+            background: rgba(11, 15, 25, 0.9);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-right: 1px solid rgba(56, 68, 107, 0.3);
+        }
+        
+        /* Enhanced glass card for main content area */
+        .main-content-bg {
+            background: radial-gradient(ellipse at center, rgba(17, 24, 39, 0.95) 0%, rgba(11, 15, 25, 0.9) 100%);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 24px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        /* Animated gradient header bar */
+        .gradient-bar {
+            height: 3px;
+            background: linear-gradient(90deg, #00D4FF, #7B61FF, #00D4FF);
+            background-size: 200% 100%;
+            animation: shimmer 3s linear infinite;
+        }
+        
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+        
+        /* Hero shimmer bar */
+        .hero-shimmer {
+            height: 4px;
+            background: linear-gradient(90deg, transparent, #00D4FF, #7B61FF, #00D4FF, transparent);
+            background-size: 400% 100%;
+            animation: heroShimmer 4s linear infinite;
+            border-radius: 2px;
+        }
+        
+        @keyframes heroShimmer {
+            0% { background-position: -400% 0; }
+            100% { background-position: 400% 0; }
+        }
+        
+        /* Pulsing status dot */
+        .pulse-dot {
+            position: relative;
+        }
+        
+        .pulse-dot::after {
+            content: '';
+            position: absolute;
+            inset: -3px;
+            border-radius: 50%;
+            background: inherit;
+            opacity: 0.4;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 0.4; }
+            50% { transform: scale(1.1); opacity: 0.6; }
+        }
+        
+        /* Smooth page transitions */
+        .page-enter {
+            animation: fadeSlideIn 0.3s ease-out;
+        }
+        
+        @keyframes fadeSlideIn {
+            from {
+                opacity: 0;
+                transform: translateY(8px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+        
+        ::-webkit-scrollbar-track {
+            background: #0B0F19;
+        }
+        
+        ::-webkit-scrollbar-thumb {
+            background: #2A3150;
+            border-radius: 3px;
+        }
+        
+        ::-webkit-scrollbar-thumb:hover {
+            background: #3A4260;
+        }
+        
+        /* JSON syntax highlighting */
+        .json-key {
+            color: #00D4FF;
+        }
+        
+        .json-string {
+            color: #87CEEB;
+        }
+        
+        .json-number {
+            color: #7B61FF;
+        }
+        
+        .json-boolean {
+            color: #FF5252;
+        }
+        
+        .json-redacted {
+            color: #FF5252;
+            font-style: italic;
+            background: rgba(255, 82, 82, 0.1);
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+        
+        /* Progress bars */
+        .progress-bar {
+            background: rgba(56, 68, 107, 0.3);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 8px;
+            background: linear-gradient(90deg, #00D4FF, #7B61FF);
+            border-radius: 8px;
+            transition: width 0.5s ease;
+        }
+        
+        /* Mini progress bar for tokens */
+        .mini-progress {
+            height: 4px;
+            background: rgba(56, 68, 107, 0.3);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .mini-progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #00D4FF, #7B61FF);
+            border-radius: 2px;
+            transition: width 0.3s ease;
+        }
+        
+        /* File tree styling */
+        .tree-item {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.875rem;
+        }
+        
+        .tree-directory {
+            color: #00D4FF;
+        }
+        
+        .tree-file {
+            color: #E8EAED;
+        }
+        
+        .tree-size {
+            color: #5A6178;
+        }
+        
+        /* Card hover animations */
+        .skill-card {
+            transition: transform 0.2s ease;
+        }
+        
+        .skill-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        /* Badge styles */
+        .badge-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #EF4444;
+            border: 1px solid rgba(239, 68, 68, 0.3);
+        }
+        
+        .badge-warning {
+            background: rgba(245, 158, 11, 0.2);
+            color: #F59E0B;
+            border: 1px solid rgba(245, 158, 11, 0.3);
+        }
+        
+        .badge-info {
+            background: rgba(59, 130, 246, 0.2);
+            color: #3B82F6;
+            border: 1px solid rgba(59, 130, 246, 0.3);
+        }
+        
+        .badge-success {
+            background: rgba(34, 197, 94, 0.2);
+            color: #22C55E;
+            border: 1px solid rgba(34, 197, 94, 0.3);
+        }
+        
+        /* Truncated content badge */
+        .truncated-badge {
+            background: rgba(168, 85, 247, 0.2);
+            color: #A855F7;
+            border: 1px solid rgba(168, 85, 247, 0.3);
+            font-size: 0.75rem;
+            padding: 2px 8px;
+            border-radius: 12px;
+        }
+        
+        /* Responsive design helpers */
+        @media (max-width: 768px) {
+            .glass-sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            
+            .sidebar-open {
+                transform: translateX(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-[#0B0F19] text-[#E8EAED] overflow-hidden">
+    <div x-data="dashboard()" x-init="init()" class="flex h-screen">
+        <!-- Sidebar -->
+        <div class="fixed left-0 top-0 h-full w-60 glass-sidebar z-30 flex flex-col md:relative md:z-0">
+            <!-- Gradient bar at top -->
+            <div class="gradient-bar"></div>
+            
+            <!-- Logo/Branding -->
+            <div class="p-6 border-b border-gray-700/30">
+                <div class="flex items-center space-x-3">
+                    <div class="w-8 h-8 bg-gradient-to-br from-[#00D4FF] to-[#7B61FF] rounded-lg flex items-center justify-center">
+                        <svg class="w-5 h-5 text-white" fill="currentColor" viewBox="0 0 20 20">
+                            <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                    </div>
+                    <div>
+                        <h1 class="text-lg font-semibold text-[#E8EAED]">OpenClaw</h1>
+                        <p class="text-xs text-[#9AA0B0]">Dashboard v2.0</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Navigation -->
+            <nav class="flex-1 px-4 py-6 space-y-2">
+                <a href="#" @click="navigate('session')" 
+                   :class="currentPage === 'session' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                    </svg>
+                    <span>Session Status</span>
+                </a>
+                
+                <a href="#" @click="navigate('config')" 
+                   :class="currentPage === 'config' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"></path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <span>Configuration</span>
+                </a>
+                
+                <a href="#" @click="navigate('memory')" 
+                   :class="currentPage === 'memory' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                    </svg>
+                    <span>Memory Files</span>
+                </a>
+                
+                <a href="#" @click="navigate('skills')" 
+                   :class="currentPage === 'skills' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                    </svg>
+                    <span>Skills</span>
+                </a>
+                
+                <a href="#" @click="navigate('workspace')" 
+                   :class="currentPage === 'workspace' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                    </svg>
+                    <span>Workspace</span>
+                </a>
+                
+                <a href="#" @click="navigate('channels')" 
+                   :class="currentPage === 'channels' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                    </svg>
+                    <span>Channels</span>
+                </a>
+                
+                <a href="#" @click="navigate('security')" 
+                   :class="currentPage === 'security' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                    </svg>
+                    <span>Security</span>
+                </a>
+                
+                <a href="#" @click="navigate('system')" 
+                   :class="currentPage === 'system' ? 'nav-item-active' : ''"
+                   class="flex items-center space-x-3 px-3 py-2 rounded-lg text-[#9AA0B0] hover:text-[#E8EAED] hover:bg-gray-800/30 transition-colors">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                    </svg>
+                    <span>System Info</span>
+                </a>
+            </nav>
+            
+            <!-- Branding & version -->
+            <div class="px-6 py-4 border-t border-gray-700/30">
+                <div class="flex items-center space-x-2 mb-1">
+                    <div class="w-4 h-4 rounded bg-gradient-to-br from-[#00D4FF] to-[#7B61FF] flex items-center justify-center">
+                        <span class="text-[8px] font-bold text-white leading-none">R</span>
+                    </div>
+                    <span class="text-xs font-semibold text-[#9AA0B0] tracking-wide">Ratutesla Lab</span>
+                </div>
+                <p class="text-[10px] text-[#5A6178] pl-6">OpenClaw Dashboard v2.0</p>
+            </div>
+        </div>
+        
+        <!-- Mobile sidebar overlay -->
+        <div class="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden" 
+             x-show="sidebarOpen" 
+             @click="sidebarOpen = false"></div>
+        
+        <!-- Main content -->
+        <div class="flex-1 flex flex-col min-h-0 md:ml-0">
+            <!-- Mobile header -->
+            <div class="md:hidden bg-[#0B0F19] p-4 border-b border-gray-700/30">
+                <button @click="sidebarOpen = !sidebarOpen" class="text-[#9AA0B0]">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Content area with enhanced background -->
+            <div class="flex-1 overflow-auto p-6">
+                <div class="main-content-bg p-6 rounded-3xl min-h-full">
+                    <!-- Session Status Page - COMPLETE REDESIGN -->
+                    <div x-show="currentPage === 'session'" class="page-enter">
+                        <!-- Hero Area -->
+                        <div class="mb-8">
+                            <h1 class="text-4xl font-bold gradient-text mb-2">Cortana Dashboard</h1>
+                            <div class="hero-shimmer mb-4"></div>
+                            <p class="text-[#9AA0B0] text-lg mb-1">Neural interface active • All systems operational</p>
+                            <p class="text-xs text-[#5A6178] tracking-widest uppercase">Powered by Ratutesla Lab</p>
+                        </div>
+                        
+                        <div x-show="loading.session" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                            <div class="glass-card p-6">
+                                <div class="skeleton h-4 mb-2"></div>
+                                <div class="skeleton h-8 w-3/4"></div>
+                            </div>
+                            <div class="glass-card p-6">
+                                <div class="skeleton h-4 mb-2"></div>
+                                <div class="skeleton h-8 w-2/3"></div>
+                            </div>
+                            <div class="glass-card p-6">
+                                <div class="skeleton h-4 mb-2"></div>
+                                <div class="skeleton h-8 w-1/2"></div>
+                            </div>
+                            <div class="glass-card p-6">
+                                <div class="skeleton h-4 mb-2"></div>
+                                <div class="skeleton h-8 w-3/5"></div>
+                            </div>
+                        </div>
+                        
+                        <div x-show="!loading.session && data.session">
+                            <!-- 4 Metric Cards -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                <!-- MODEL -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00D4FF]">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <svg class="w-7 h-7 text-[#00D4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">MODEL</p>
+                                    <p class="text-2xl font-bold text-[#00D4FF]" x-text="formatModelName(data.session?.config_info?.model)"></p>
+                                </div>
+                                
+                                <!-- THINKING -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#7B61FF]">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <svg class="w-7 h-7 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">THINKING</p>
+                                    <p class="text-2xl font-bold text-[#7B61FF]" x-text="data.session?.config_info?.thinking || 'Unknown'"></p>
+                                </div>
+                                
+                                <!-- REASONING -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00E676]">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <svg class="w-7 h-7 text-[#00E676]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">REASONING</p>
+                                    <p class="text-2xl font-bold" 
+                                       :class="data.session?.config_info?.reasoning === 'On' ? 'text-[#00E676]' : 'text-[#FF5252]'"
+                                       x-text="data.session?.config_info?.reasoning || 'Unknown'"></p>
+                                </div>
+                                
+                                <!-- SESSIONS -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#FFAB40]">
+                                    <div class="flex items-center justify-between mb-3">
+                                        <svg class="w-7 h-7 text-[#FFAB40]" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="1.5">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                                        </svg>
+                                    </div>
+                                    <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">SESSIONS</p>
+                                    <p class="text-2xl font-bold text-[#FFAB40]" x-text="data.session?.sessions?.length || '0'"></p>
+                                </div>
+                            </div>
+                            
+                            <!-- System Overview — Sectioned List -->
+                            <div class="mb-6 space-y-4">
+                                <template x-for="group in getOverviewGroups(data.session?.overview || {})" :key="group.title">
+                                    <div class="glass-card overflow-hidden">
+                                        <!-- Section header -->
+                                        <div class="px-5 py-3 border-b border-gray-700/30 flex items-center space-x-2.5">
+                                            <svg class="w-4 h-4 flex-shrink-0" :style="`color: ${group.color}`" fill="none" stroke="currentColor" viewBox="0 0 24 24" stroke-width="2">
+                                                <path stroke-linecap="round" stroke-linejoin="round" :d="group.iconPath"></path>
+                                            </svg>
+                                            <h4 class="text-xs font-semibold uppercase tracking-[0.15em]" :style="`color: ${group.color}`" x-text="group.title"></h4>
+                                        </div>
+                                        <!-- Rows -->
+                                        <div class="divide-y divide-gray-700/20">
+                                            <template x-for="row in group.rows" :key="row.key">
+                                                <div class="flex items-center justify-between px-5 py-3 hover:bg-gray-800/20 transition-colors">
+                                                    <!-- Left: label -->
+                                                    <span class="text-sm text-[#9AA0B0] flex-shrink-0 w-40" x-text="row.label"></span>
+                                                    <!-- Center: value -->
+                                                    <span class="flex-1 text-sm font-mono text-[#E8EAED] text-right truncate ml-4" :title="row.value" x-text="row.value"></span>
+                                                    <!-- Right: status dot / pill -->
+                                                    <span x-show="row.status"
+                                                          class="flex-shrink-0 ml-3 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                                                          :class="row.statusClass"
+                                                          x-text="row.status"></span>
+                                                </div>
+                                            </template>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- Active Sessions Table -->
+                            <div class="glass-card p-6 mb-6 gradient-border-left border-l-[#7B61FF]">
+                                <h3 class="text-xl font-semibold text-[#E8EAED] mb-4 flex items-center">
+                                    <svg class="w-6 h-6 mr-3 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                                    </svg>
+                                    Active Sessions
+                                </h3>
+                                <div class="overflow-x-auto">
+                                    <table class="w-full">
+                                        <thead>
+                                            <tr class="border-b border-gray-700/30">
+                                                <th class="text-left py-3 px-4 text-[#9AA0B0] font-medium">Session</th>
+                                                <th class="text-left py-3 px-4 text-[#9AA0B0] font-medium">Type</th>
+                                                <th class="text-left py-3 px-4 text-[#9AA0B0] font-medium">Age</th>
+                                                <th class="text-left py-3 px-4 text-[#9AA0B0] font-medium">Model</th>
+                                                <th class="text-left py-3 px-4 text-[#9AA0B0] font-medium">Tokens</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            <template x-for="session in data.session?.sessions || []" :key="session.key">
+                                                <tr class="border-b border-gray-700/20 hover:bg-gray-800/30 transition-colors">
+                                                    <td class="py-3 px-4">
+                                                        <span class="font-mono text-[#00D4FF] text-sm" 
+                                                              x-text="truncateSessionKey(session.key)" 
+                                                              :title="session.key"></span>
+                                                    </td>
+                                                    <td class="py-3 px-4">
+                                                        <span class="px-2 py-1 bg-blue-500/20 text-blue-300 rounded-full text-xs" 
+                                                              x-text="session.kind"></span>
+                                                    </td>
+                                                    <td class="py-3 px-4 font-mono text-[#E8EAED] text-sm" x-text="session.age"></td>
+                                                    <td class="py-3 px-4 font-mono text-[#E8EAED] text-sm" x-text="session.model"></td>
+                                                    <td class="py-3 px-4">
+                                                        <div class="flex items-center space-x-2">
+                                                            <span class="font-mono text-[#E8EAED] text-sm" x-text="session.tokens"></span>
+                                                            <div class="mini-progress w-16" x-show="session.tokens.includes('/')">
+                                                                <div class="mini-progress-fill" 
+                                                                     :style="`width: ${getTokenPercentage(session.tokens)}%`"></div>
+                                                            </div>
+                                                        </div>
+                                                    </td>
+                                                </tr>
+                                            </template>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                            
+                            <!-- Channels & Security Row -->
+                            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                                <!-- Channels Status -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00E676]">
+                                    <h3 class="text-lg font-semibold text-[#E8EAED] mb-4 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-[#00E676]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"></path>
+                                        </svg>
+                                        Channels
+                                    </h3>
+                                    <div class="space-y-2">
+                                        <template x-for="channel in data.session?.channels_status || []" :key="channel.channel">
+                                            <div class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot" 
+                                                         x-show="channel.state === 'OK'"></div>
+                                                    <span class="text-[#E8EAED]" x-text="channel.channel"></span>
+                                                </div>
+                                                <span class="text-xs text-[#9AA0B0]" x-text="channel.enabled"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+                                
+                                <!-- Security Summary -->
+                                <div class="glass-card p-6 gradient-border-left border-l-[#FFAB40]">
+                                    <h3 class="text-lg font-semibold text-[#E8EAED] mb-4 flex items-center">
+                                        <svg class="w-5 h-5 mr-2 text-[#FFAB40]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                                        </svg>
+                                        Security
+                                    </h3>
+                                    <div class="space-y-2" x-show="data.session?.security_summary">
+                                        <template x-for="item in parseSecuritySummary(data.session?.security_summary)" :key="item.label">
+                                            <div class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <div class="flex items-center space-x-3">
+                                                    <div class="w-3 h-3 rounded-full"
+                                                         :class="item.color"></div>
+                                                    <span class="text-[#E8EAED] capitalize" x-text="item.label"></span>
+                                                </div>
+                                                <span class="text-xs font-mono text-[#9AA0B0]" x-text="item.count"></span>
+                                            </div>
+                                        </template>
+                                    </div>
+                                    <div x-show="!data.session?.security_summary" class="text-sm text-[#5A6178] p-3">
+                                        Security audit not available
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Raw Output -->
+                            <div class="glass-card p-6" x-data="{expanded: false}">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-[#E8EAED]">Raw Output</h3>
+                                    <button @click="expanded = !expanded" 
+                                            class="px-3 py-1 bg-gray-700/30 hover:bg-gray-700/50 rounded text-xs transition-colors">
+                                        <span x-text="expanded ? 'Collapse' : 'Expand'"></span>
+                                    </button>
+                                </div>
+                                <div x-show="expanded" class="bg-gray-900/50 rounded-lg p-4 overflow-x-auto">
+                                    <pre class="text-xs font-mono text-[#9AA0B0] whitespace-pre-wrap" x-text="data.session?.raw"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Configuration Page -->
+                    <div x-show="currentPage === 'config'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Configuration</h1>
+                            <p class="text-[#9AA0B0] mt-1">OpenClaw configuration with redacted sensitive values</p>
+                        </div>
+                        
+                        <div x-show="loading.config" class="glass-card p-6">
+                            <div class="skeleton h-4 w-3/4 mb-4"></div>
+                            <div class="skeleton h-32"></div>
+                        </div>
+                        
+                        <div x-show="!loading.config && data.config" class="space-y-6">
+                            <template x-for="[sectionName, sectionData] in Object.entries(data.config?.sections || {})" :key="sectionName">
+                                <div class="glass-card p-6 gradient-border-left" x-data="{expanded: sectionName === 'agents' || sectionName === 'gateway'}">
+                                    <div class="flex items-center justify-between mb-4">
+                                        <div class="flex items-center space-x-3">
+                                            <div class="w-8 h-8 bg-gradient-to-br from-[#00D4FF] to-[#7B61FF] rounded-lg flex items-center justify-center text-lg">
+                                                <span x-text="getSectionIcon(sectionName)"></span>
+                                            </div>
+                                            <h3 class="text-lg font-semibold text-[#E8EAED] capitalize" x-text="sectionName"></h3>
+                                        </div>
+                                        <button @click="expanded = !expanded" 
+                                                class="px-3 py-1 bg-gray-700/30 hover:bg-gray-700/50 rounded text-xs transition-colors">
+                                            <span x-text="expanded ? 'Collapse' : 'Expand'"></span>
+                                        </button>
+                                    </div>
+                                    <div x-show="expanded" class="bg-gray-900/30 rounded-lg p-4 overflow-x-auto">
+                                        <pre class="text-xs font-mono whitespace-pre-wrap" x-html="syntaxHighlight(JSON.stringify(sectionData, null, 2))"></pre>
+                                    </div>
+                                </div>
+                            </template>
+                        </div>
+                    </div>
+                    
+                    <!-- Memory Files Page -->
+                    <div x-show="currentPage === 'memory'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Memory Files</h1>
+                            <p class="text-[#9AA0B0] mt-1">Workspace memory files and daily logs</p>
+                        </div>
+                        
+                        <div x-show="loading.memory" class="glass-card p-6">
+                            <div class="skeleton h-4 w-1/2 mb-4"></div>
+                            <div class="skeleton h-24 mb-4"></div>
+                            <div class="skeleton h-16"></div>
+                        </div>
+                        
+                        <div x-show="!loading.memory && data.memory">
+                            <!-- Summary metrics -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00D4FF]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Total Files</p>
+                                            <p class="text-2xl font-bold text-[#00D4FF]" x-text="data.memory?.totals?.total_files || 0"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#00D4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#7B61FF]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Total Size</p>
+                                            <p class="text-2xl font-bold text-[#7B61FF]" x-text="data.memory?.totals?.total_size_str || '0 B'"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00E676]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Daily Logs</p>
+                                            <p class="text-2xl font-bold text-[#00E676]" x-text="data.memory?.totals?.daily_logs_count || 0"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#00E676]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Workspace files -->
+                            <div class="mb-8">
+                                <h3 class="text-xl font-semibold text-[#E8EAED] mb-6">Workspace Files</h3>
+                                <div class="grid gap-6">
+                                    <template x-for="file in data.memory?.workspace_files || []" :key="file.name">
+                                        <div class="glass-card p-6" x-data="{expanded: false}">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <div class="flex items-center space-x-3">
+                                                    <svg class="w-5 h-5 text-[#00D4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                                    </svg>
+                                                    <h4 class="text-lg font-semibold text-[#E8EAED]" x-text="file.name"></h4>
+                                                </div>
+                                                <div class="flex items-center space-x-3">
+                                                    <span class="text-sm text-[#5A6178]" x-text="file.size_str"></span>
+                                                    <button @click="expanded = !expanded" 
+                                                            class="px-3 py-1 bg-gray-700/30 hover:bg-gray-700/50 rounded text-xs transition-colors">
+                                                        <span x-text="expanded ? 'Collapse' : 'View'"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="text-sm text-[#9AA0B0] mb-3" x-text="new Date(file.modified * 1000).toLocaleString()"></p>
+                                            <div x-show="expanded" class="bg-gray-900/30 rounded-lg p-4 overflow-x-auto">
+                                                <pre class="text-sm whitespace-pre-wrap text-[#E8EAED]" x-text="file.content"></pre>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                            
+                            <!-- Daily logs -->
+                            <div x-show="data.memory?.daily_logs?.length > 0">
+                                <h3 class="text-xl font-semibold text-[#E8EAED] mb-6">Daily Logs</h3>
+                                <div class="grid gap-6">
+                                    <template x-for="log in data.memory?.daily_logs || []" :key="log.name">
+                                        <div class="glass-card p-6" x-data="{expanded: false}">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <div class="flex items-center space-x-3">
+                                                    <svg class="w-5 h-5 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <h4 class="text-lg font-semibold text-[#E8EAED]" x-text="log.name"></h4>
+                                                    <span x-show="log.truncated" class="truncated-badge">TRUNCATED</span>
+                                                </div>
+                                                <div class="flex items-center space-x-3">
+                                                    <span class="text-sm text-[#5A6178]" x-text="log.size_str"></span>
+                                                    <button @click="expanded = !expanded" 
+                                                            class="px-3 py-1 bg-gray-700/30 hover:bg-gray-700/50 rounded text-xs transition-colors">
+                                                        <span x-text="expanded ? 'Collapse' : 'View'"></span>
+                                                    </button>
+                                                </div>
+                                            </div>
+                                            <p class="text-sm text-[#9AA0B0] mb-3" x-text="new Date(log.modified * 1000).toLocaleString()"></p>
+                                            <div x-show="expanded" class="bg-gray-900/30 rounded-lg p-4 overflow-x-auto">
+                                                <pre class="text-sm whitespace-pre-wrap text-[#E8EAED]" x-text="log.content"></pre>
+                                            </div>
+                                        </div>
+                                    </template>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Skills Page -->
+                    <div x-show="currentPage === 'skills'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Installed Skills</h1>
+                            <p class="text-[#9AA0B0] mt-1">Available OpenClaw skills and capabilities</p>
+                        </div>
+                        
+                        <div x-show="loading.skills" class="glass-card p-6">
+                            <div class="skeleton h-6 w-48 mb-4"></div>
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                <div class="skeleton h-32"></div>
+                                <div class="skeleton h-32"></div>
+                                <div class="skeleton h-32"></div>
+                            </div>
+                        </div>
+                        
+                        <div x-show="!loading.skills && data.skills">
+                            <!-- Skills count badge -->
+                            <div class="mb-8">
+                                <span class="inline-flex items-center px-6 py-3 rounded-full bg-gradient-to-r from-[#00D4FF] to-[#7B61FF] text-white font-medium text-lg">
+                                    <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                    </svg>
+                                    <span x-text="data.skills?.count || 0"></span> Skills Available
+                                </span>
+                            </div>
+                            
+                            <!-- Skills grid -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <template x-for="skill in data.skills?.skills || []" :key="skill.name">
+                                    <div class="glass-card p-6 skill-card">
+                                        <div class="flex items-start justify-between mb-3">
+                                            <div class="flex items-center space-x-3">
+                                                <div class="w-10 h-10 bg-gradient-to-br from-[#00D4FF] to-[#7B61FF] rounded-lg flex items-center justify-center">
+                                                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                                    </svg>
+                                                </div>
+                                                <div>
+                                                    <h3 class="font-semibold text-[#00D4FF]" x-text="skill.title || skill.name"></h3>
+                                                </div>
+                                            </div>
+                                            <span class="inline-flex items-center px-2 py-1 rounded-full bg-gray-700/30 text-xs text-[#9AA0B0]">
+                                                <span x-text="skill.file_count"></span> files
+                                            </span>
+                                        </div>
+                                        <p class="text-sm text-[#9AA0B0]" x-text="skill.description || 'No description available'"></p>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Workspace Page -->
+                    <div x-show="currentPage === 'workspace'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Workspace</h1>
+                            <p class="text-[#9AA0B0] mt-1">File structure and organization</p>
+                        </div>
+                        
+                        <div x-show="loading.workspace" class="glass-card p-6">
+                            <div class="skeleton h-6 w-64 mb-4"></div>
+                            <div class="skeleton h-64"></div>
+                        </div>
+                        
+                        <div x-show="!loading.workspace && data.workspace">
+                            <!-- Summary metrics -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="glass-card p-6 gradient-border-left border-l-[#E8EAED]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Files</p>
+                                            <p class="text-2xl font-bold text-[#E8EAED]" x-text="data.workspace?.totals?.files || 0"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#E8EAED]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00D4FF]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Directories</p>
+                                            <p class="text-2xl font-bold text-[#00D4FF]" x-text="data.workspace?.totals?.directories || 0"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#00D4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#7B61FF]">
+                                    <div class="flex items-center justify-between">
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-2">Total Size</p>
+                                            <p class="text-2xl font-bold text-[#7B61FF]" x-text="data.workspace?.totals?.total_size_str || '0 B'"></p>
+                                        </div>
+                                        <svg class="w-8 h-8 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"></path>
+                                        </svg>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- File tree -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-lg font-semibold text-[#E8EAED] mb-4">File Tree</h3>
+                                <div class="overflow-x-auto">
+                                    <div x-html="renderFileTree(data.workspace?.tree)"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Channels Page -->
+                    <div x-show="currentPage === 'channels'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Channels</h1>
+                            <p class="text-[#9AA0B0] mt-1">Communication channels configuration</p>
+                        </div>
+                        
+                        <div x-show="loading.channels" class="glass-card p-6">
+                            <div class="skeleton h-6 w-48 mb-4"></div>
+                            <div class="skeleton h-32"></div>
+                        </div>
+                        
+                        <div x-show="!loading.channels && data.channels">
+                            <!-- DM Scope -->
+                            <div class="glass-card p-6 mb-8">
+                                <h3 class="text-lg font-semibold text-[#E8EAED] mb-4">DM Scope</h3>
+                                <div class="flex items-center space-x-3">
+                                    <span class="px-4 py-2 bg-blue-500/20 text-blue-300 rounded-full text-sm font-mono" 
+                                          x-text="data.channels?.dm_scope || 'Not set'"></span>
+                                </div>
+                            </div>
+                            
+                            <!-- Channels list -->
+                            <div class="grid gap-6">
+                                <template x-for="[channelName, channelConfig] in Object.entries(data.channels?.channels || {})" :key="channelName">
+                                    <div class="glass-card p-6">
+                                        <div class="flex items-center space-x-3 mb-4">
+                                            <div class="w-3 h-3 bg-green-500 rounded-full pulse-dot"></div>
+                                            <h3 class="text-lg font-semibold text-[#E8EAED]" x-text="channelName"></h3>
+                                            <span class="px-3 py-1 bg-gray-700/30 text-[#9AA0B0] rounded text-xs">Active</span>
+                                        </div>
+                                        
+                                        <div x-show="typeof channelConfig === 'object'" class="space-y-3">
+                                            <div x-show="channelConfig.dmPolicy" class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <span class="text-[#9AA0B0]">DM Policy</span>
+                                                <span class="px-3 py-1 bg-blue-500/20 text-blue-300 rounded-full text-sm" x-text="channelConfig.dmPolicy"></span>
+                                            </div>
+                                            
+                                            <div x-show="channelConfig.groupPolicy" class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <span class="text-[#9AA0B0]">Group Policy</span>
+                                                <span class="px-3 py-1 bg-purple-500/20 text-purple-300 rounded-full text-sm" x-text="channelConfig.groupPolicy"></span>
+                                            </div>
+                                            
+                                            <div x-show="channelConfig.streamMode" class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <span class="text-[#9AA0B0]">Stream Mode</span>
+                                                <span class="px-3 py-1 bg-green-500/20 text-green-300 rounded-full text-sm" x-text="channelConfig.streamMode"></span>
+                                            </div>
+                                            
+                                            <div x-show="channelConfig.allowFrom" class="flex items-center justify-between p-3 bg-gray-900/30 rounded-lg">
+                                                <span class="text-[#9AA0B0]">Allow From</span>
+                                                <span class="px-3 py-1 bg-orange-500/20 text-orange-300 rounded-full text-sm" x-text="channelConfig.allowFrom"></span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Security Page - REDESIGNED -->
+                    <div x-show="currentPage === 'security'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">Security Audit</h1>
+                            <p class="text-[#9AA0B0] mt-1">Security status and recommendations</p>
+                        </div>
+                        
+                        <div x-show="loading.security" class="glass-card p-6">
+                            <div class="skeleton h-6 w-64 mb-4"></div>
+                            <div class="skeleton h-48"></div>
+                        </div>
+                        
+                        <div x-show="!loading.security && data.security">
+                            <!-- Summary badges -->
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                                <div class="glass-card p-6 text-center gradient-border-left border-l-red-500">
+                                    <div class="text-3xl font-bold text-red-400 mb-2" x-text="data.security?.summary?.critical || 0"></div>
+                                    <div class="text-sm text-[#9AA0B0] uppercase tracking-widest">Critical</div>
+                                </div>
+                                
+                                <div class="glass-card p-6 text-center gradient-border-left border-l-yellow-500">
+                                    <div class="text-3xl font-bold text-yellow-400 mb-2" x-text="data.security?.summary?.warning || 0"></div>
+                                    <div class="text-sm text-[#9AA0B0] uppercase tracking-widest">Warnings</div>
+                                </div>
+                                
+                                <div class="glass-card p-6 text-center gradient-border-left border-l-blue-500">
+                                    <div class="text-3xl font-bold text-blue-400 mb-2" x-text="data.security?.summary?.info || 0"></div>
+                                    <div class="text-sm text-[#9AA0B0] uppercase tracking-widest">Info</div>
+                                </div>
+                            </div>
+                            
+                            <!-- All clear state -->
+                            <div x-show="data.security?.summary?.critical === 0 && data.security?.summary?.warning === 0" 
+                                 class="glass-card p-6 mb-8 border-green-500/30">
+                                <div class="flex items-center space-x-4 text-center justify-center">
+                                    <svg class="w-12 h-12 text-green-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                    </svg>
+                                    <div>
+                                        <h3 class="text-2xl font-semibold text-green-400 mb-2">All Clear</h3>
+                                        <p class="text-[#9AA0B0]">No critical security issues detected</p>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Security findings -->
+                            <div x-show="data.security?.findings?.length > 0" class="space-y-6 mb-8">
+                                <h3 class="text-xl font-semibold text-[#E8EAED] mb-4">Security Findings</h3>
+                                <template x-for="finding in data.security?.findings || []" :key="$index">
+                                    <div class="glass-card p-6 relative overflow-hidden">
+                                        <!-- Severity color bar -->
+                                        <div class="absolute left-0 top-0 bottom-0 w-1" 
+                                             :class="finding.severity === 'critical' ? 'bg-red-500' : finding.severity === 'warning' ? 'bg-yellow-500' : 'bg-blue-500'"></div>
+                                        
+                                        <div class="ml-4">
+                                            <div class="flex items-start justify-between mb-3">
+                                                <div class="flex items-center space-x-3">
+                                                    <span class="px-3 py-1 rounded-full text-xs font-semibold"
+                                                          :class="finding.severity === 'critical' ? 'badge-critical' : finding.severity === 'warning' ? 'badge-warning' : 'badge-info'"
+                                                          x-text="finding.severity.toUpperCase()"></span>
+                                                    <span class="font-mono text-sm text-[#9AA0B0]" x-text="finding.id"></span>
+                                                </div>
+                                            </div>
+                                            
+                                            <h4 class="font-semibold text-[#E8EAED] mb-3 text-lg" x-text="finding.title"></h4>
+                                            
+                                            <p class="text-[#9AA0B0] mb-4 leading-relaxed" x-text="finding.description"></p>
+                                            
+                                            <div x-show="finding.fix" class="bg-gray-900/30 rounded-lg p-4 border-l-4 border-blue-400">
+                                                <div class="flex items-center space-x-2 mb-2">
+                                                    <svg class="w-4 h-4 text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                                    </svg>
+                                                    <span class="text-blue-400 font-medium text-sm">Recommendation</span>
+                                                </div>
+                                                <p class="text-sm text-[#9AA0B0]" x-text="finding.fix"></p>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                            
+                            <!-- Raw output -->
+                            <div class="glass-card p-6" x-data="{expanded: false}">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-[#E8EAED]">Raw Audit Output</h3>
+                                    <button @click="expanded = !expanded" 
+                                            class="px-3 py-1 bg-gray-700/30 hover:bg-gray-700/50 rounded text-xs transition-colors">
+                                        <span x-text="expanded ? 'Collapse' : 'Expand'"></span>
+                                    </button>
+                                </div>
+                                <div x-show="expanded" class="bg-gray-900/50 rounded-lg p-4 overflow-x-auto">
+                                    <pre class="text-xs font-mono text-[#9AA0B0] whitespace-pre-wrap" x-text="data.security?.raw"></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- System Info Page -->
+                    <div x-show="currentPage === 'system'" class="page-enter">
+                        <div class="mb-6">
+                            <h1 class="text-2xl font-semibold text-[#E8EAED]">System Information</h1>
+                            <p class="text-[#9AA0B0] mt-1">Host system status and resources</p>
+                        </div>
+                        
+                        <div x-show="loading.system" class="glass-card p-6">
+                            <div class="skeleton h-6 w-48 mb-4"></div>
+                            <div class="skeleton h-48"></div>
+                        </div>
+                        
+                        <div x-show="!loading.system && data.system">
+                            <!-- System basics -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00D4FF]">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="w-8 h-8 text-[#00D4FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-1">Hostname</p>
+                                            <p class="text-lg font-mono font-semibold text-[#00D4FF]" x-text="data.system?.hostname || 'Unknown'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#7B61FF]">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="w-8 h-8 text-[#7B61FF]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-1">OS</p>
+                                            <p class="text-lg font-mono font-semibold text-[#7B61FF]" x-text="data.system?.os?.split(' ')[0] || 'Unknown'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#00E676]">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="w-8 h-8 text-[#00E676]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-1">CPU Cores</p>
+                                            <p class="text-lg font-mono font-semibold text-[#00E676]" x-text="data.system?.cpu?.count || 0"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="glass-card p-6 gradient-border-left border-l-[#FFAB40]">
+                                    <div class="flex items-center space-x-3">
+                                        <svg class="w-8 h-8 text-[#FFAB40]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                                        </svg>
+                                        <div>
+                                            <p class="text-xs uppercase tracking-widest text-[#9AA0B0] font-semibold mb-1">Uptime</p>
+                                            <p class="text-lg font-mono font-semibold text-[#FFAB40]" x-text="data.system?.uptime_str || 'Unknown'"></p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- CPU Info -->
+                            <div class="glass-card p-6 mb-6">
+                                <h3 class="text-lg font-semibold text-[#E8EAED] mb-4">CPU Usage</h3>
+                                <div class="flex items-center space-x-6">
+                                    <div>
+                                        <p class="text-sm text-[#9AA0B0]">Usage</p>
+                                        <p class="text-2xl font-semibold text-[#E8EAED]" x-text="(data.system?.cpu?.usage || 0).toFixed(1) + '%'"></p>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="progress-bar">
+                                            <div class="progress-fill" 
+                                                 :style="`width: ${data.system?.cpu?.usage || 0}%`"
+                                                 :class="(data.system?.cpu?.usage || 0) > 80 ? 'bg-red-500' : (data.system?.cpu?.usage || 0) > 60 ? 'bg-yellow-500' : 'bg-gradient-to-r from-[#00D4FF] to-[#7B61FF]'"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Memory Usage -->
+                            <div class="glass-card p-6 mb-6">
+                                <h3 class="text-lg font-semibold text-[#E8EAED] mb-4">Memory Usage</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[#9AA0B0]">Used / Total</span>
+                                        <span class="font-mono text-[#E8EAED] font-semibold" x-text="`${data.system?.memory?.used_str || '0 B'} / ${data.system?.memory?.total_str || '0 B'}`"></span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" 
+                                             :style="`width: ${data.system?.memory?.percent || 0}%`"
+                                             :class="(data.system?.memory?.percent || 0) > 80 ? 'bg-red-500' : (data.system?.memory?.percent || 0) > 60 ? 'bg-yellow-500' : 'bg-gradient-to-r from-[#00D4FF] to-[#7B61FF]'"></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-sm text-[#9AA0B0] font-semibold" x-text="`${(data.system?.memory?.percent || 0).toFixed(1)}% used`"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Disk Usage -->
+                            <div class="glass-card p-6">
+                                <h3 class="text-lg font-semibold text-[#E8EAED] mb-4">Disk Usage (/)</h3>
+                                <div class="space-y-3">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-[#9AA0B0]">Used / Total</span>
+                                        <span class="font-mono text-[#E8EAED] font-semibold" x-text="`${data.system?.disk?.used_str || '0 B'} / ${data.system?.disk?.total_str || '0 B'}`"></span>
+                                    </div>
+                                    <div class="progress-bar">
+                                        <div class="progress-fill" 
+                                             :style="`width: ${data.system?.disk?.percent || 0}%`"
+                                             :class="(data.system?.disk?.percent || 0) > 80 ? 'bg-red-500' : (data.system?.disk?.percent || 0) > 60 ? 'bg-yellow-500' : 'bg-gradient-to-r from-[#00D4FF] to-[#7B61FF]'"></div>
+                                    </div>
+                                    <div class="text-right">
+                                        <span class="text-sm text-[#9AA0B0] font-semibold" x-text="`${(data.system?.disk?.percent || 0).toFixed(1)}% used`"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function dashboard() {
+            return {
+                currentPage: 'session',
+                data: {},
+                loading: {},
+                sidebarOpen: false,
+                
+                async fetchData(endpoint) {
+                    this.loading[endpoint] = true;
+                    try {
+                        const res = await fetch(`/api/${endpoint}`);
+                        this.data[endpoint] = await res.json();
+                    } catch (error) {
+                        console.error(`Failed to fetch ${endpoint}:`, error);
+                        this.data[endpoint] = { error: error.message };
+                    } finally {
+                        this.loading[endpoint] = false;
+                    }
+                },
+                
+                async init() {
+                    await this.fetchData('session');
+                },
+                
+                async navigate(page) {
+                    this.currentPage = page;
+                    this.sidebarOpen = false; // Close mobile sidebar
+                    if (!this.data[page]) {
+                        await this.fetchData(page);
+                    }
+                },
+                
+                // Helper functions for the new design
+                formatModelName(model) {
+                    if (!model) return 'Unknown';
+                    // Extract short name from full model path
+                    const parts = model.split('/');
+                    return parts[parts.length - 1] || model;
+                },
+                
+                truncateSessionKey(key) {
+                    if (!key) return '';
+                    return key.length > 20 ? key.substring(0, 17) + '...' : key;
+                },
+                
+                getTokenPercentage(tokens) {
+                    if (!tokens || !tokens.includes('/')) return 0;
+                    const parts = tokens.match(/(\d+)k?\/(\d+)k?/);
+                    if (!parts) return 0;
+                    const used = parseInt(parts[1]);
+                    const total = parseInt(parts[2]);
+                    return total > 0 ? (used / total) * 100 : 0;
+                },
+                
+                getOverviewGroups(overview) {
+                    // ── Pre-filter & transform raw overview values ──
+                    const filtered = {};
+                    for (const [k, v] of Object.entries(overview)) {
+                        const val = String(v);
+                        const low = val.toLowerCase();
+
+                        // Drop: Tailscale when off
+                        if (k === 'tailscale' && low === 'off') continue;
+                        // Drop: Node Service when not installed
+                        if (k === 'node_service' && low.includes('not installed')) continue;
+                        // Drop: Probes when skipped
+                        if (k === 'probes' && low.includes('skipped')) continue;
+                        // Drop: Events when none
+                        if (k === 'events' && low === 'none') continue;
+                        // Drop: keys with raw IP/unknown noise (e.g. "(172.x.x.x) app unknown ...")
+                        if (/^\(\d+\.\d+\.\d+\.\d+\)/.test(val.trim())) continue;
+
+                        // Transform: clean up Agents (remove "no bootstraps ·")
+                        if (k === 'agents') {
+                            filtered[k] = val.replace(/no bootstraps\s*·\s*/gi, '').replace(/\s+/g, ' ').trim();
+                            continue;
+                        }
+                        // Transform: Memory — strip "unavailable" noise, keep plugin name
+                        if (k === 'memory') {
+                            filtered[k] = val.replace(/\s*·\s*unavailable/gi, '').trim();
+                            continue;
+                        }
+                        // Transform: Update — if current version matches latest, show "up to date"
+                        if (k === 'update') {
+                            const verMatch = val.match(/latest\s+(\S+)/);
+                            if (verMatch) {
+                                filtered[k] = `v${verMatch[1]} · ✓ up to date`;
+                            } else {
+                                filtered[k] = val;
+                            }
+                            continue;
+                        }
+
+                        filtered[k] = val;
+                    }
+
+                    // ── Define logical groupings (SVG icon paths, single-color) ──
+                    const schema = [
+                        ['Network', 'M21 12a9 9 0 01-9 9m9-9a9 9 0 00-9-9m9 9H3m9 9a9 9 0 01-9-9m9 9c1.657 0 3-4.03 3-9s-1.343-9-3-9m0 18c-1.657 0-3-4.03-3-9s1.343-9 3-9m-9 9a9 9 0 019-9', '#00D4FF', [
+                            ['dashboard', 'Dashboard'],
+                            ['gateway', 'Gateway'],
+                            ['tailscale', 'Tailscale'],
+                            ['channel', 'Channel'],
+                        ]],
+                        ['Services', 'M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z', '#7B61FF', [
+                            ['gateway_service', 'Gateway Service'],
+                            ['node_service', 'Node Service'],
+                        ]],
+                        ['Runtime', 'M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z', '#00E676', [
+                            ['os', 'Operating System'],
+                            ['agents', 'Agents'],
+                            ['sessions', 'Sessions'],
+                            ['memory', 'Memory'],
+                            ['heartbeat', 'Heartbeat'],
+                        ]],
+                        ['Maintenance', 'M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065zM15 12a3 3 0 11-6 0 3 3 0 016 0z', '#FFAB40', [
+                            ['update', 'Update'],
+                            ['probes', 'Probes'],
+                            ['events', 'Events'],
+                        ]],
+                    ];
+
+                    const seen = new Set();
+                    const groups = [];
+
+                    for (const [title, iconPath, color, fields] of schema) {
+                        const rows = [];
+                        for (const [key, label] of fields) {
+                            if (filtered[key] !== undefined) {
+                                seen.add(key);
+                                rows.push(this._buildOverviewRow(key, label, filtered[key]));
+                            }
+                        }
+                        if (rows.length) groups.push({ title, iconPath, color, rows });
+                    }
+
+                    // Catch-all for any keys not in schema
+                    const extra = [];
+                    for (const [k, v] of Object.entries(filtered)) {
+                        if (!seen.has(k)) {
+                            extra.push(this._buildOverviewRow(k, k.replace(/_/g, ' '), v));
+                        }
+                    }
+                    if (extra.length) groups.push({ title: 'Other', iconPath: 'M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4', color: '#5A6178', rows: extra });
+
+                    return groups;
+                },
+
+                _buildOverviewRow(key, label, rawValue) {
+                    const v = String(rawValue);
+                    const low = v.toLowerCase();
+                    const row = { key, label, value: v, status: null, statusClass: '' };
+
+                    if (low.includes('running') || low.includes('state active')) {
+                        row.status = '● RUNNING';
+                        row.statusClass = 'bg-green-500/20 text-green-400';
+                    } else if (low.includes('reachable') && !low.includes('unreachable')) {
+                        row.status = '● OK';
+                        row.statusClass = 'bg-green-500/20 text-green-400';
+                    } else if (low.includes('enabled') && !low.includes('running')) {
+                        row.status = '● ENABLED';
+                        row.statusClass = 'bg-blue-500/20 text-blue-400';
+                    } else if (low.includes('not installed')) {
+                        row.status = '—';
+                        row.statusClass = 'bg-gray-500/20 text-gray-500';
+                    } else if (low.includes('unreachable') || low.includes('timeout') || low.includes('unavailable')) {
+                        row.status = '⚠ WARN';
+                        row.statusClass = 'bg-yellow-500/20 text-yellow-400';
+                    } else if (low === 'off' || low === 'none') {
+                        row.status = '○ OFF';
+                        row.statusClass = 'bg-gray-500/20 text-gray-500';
+                    }
+
+                    return row;
+                },
+
+                parseSecuritySummary(summary) {
+                    if (!summary) return [];
+                    const items = [];
+                    const critMatch = summary.match(/(\d+)\s*critical/i);
+                    const warnMatch = summary.match(/(\d+)\s*warn/i);
+                    const infoMatch = summary.match(/(\d+)\s*info/i);
+                    if (critMatch) items.push({
+                        label: 'Critical', count: critMatch[1],
+                        color: parseInt(critMatch[1]) > 0 ? 'bg-red-500' : 'bg-green-500',
+                    });
+                    if (warnMatch) items.push({
+                        label: 'Warnings', count: warnMatch[1],
+                        color: parseInt(warnMatch[1]) > 0 ? 'bg-yellow-500' : 'bg-green-500',
+                    });
+                    if (infoMatch) items.push({
+                        label: 'Info', count: infoMatch[1],
+                        color: parseInt(infoMatch[1]) > 0 ? 'bg-blue-500' : 'bg-green-500',
+                    });
+                    return items;
+                },
+
+                getSectionIcon(sectionName) {
+                    const icons = {
+                        auth: '🔐',
+                        agents: '🤖',
+                        session: '🔗',
+                        channels: '📡',
+                        gateway: '🌐',
+                        hooks: '🪝',
+                        skills: '⚡',
+                        plugins: '🧩'
+                    };
+                    return icons[sectionName] || '⚙️';
+                },
+                
+                syntaxHighlight(json) {
+                    json = json.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+                    
+                    return json.replace(/("(\\u[a-zA-Z0-9]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function (match) {
+                        let cls = 'json-number';
+                        if (/^"/.test(match)) {
+                            if (/:$/.test(match)) {
+                                cls = 'json-key';
+                            } else {
+                                cls = 'json-string';
+                                // Check if it's a redacted value
+                                if (match.includes('...')) {
+                                    cls = 'json-redacted';
+                                }
+                            }
+                        } else if (/true|false/.test(match)) {
+                            cls = 'json-boolean';
+                        } else if (/null/.test(match)) {
+                            cls = 'json-null';
+                        }
+                        return '<span class="' + cls + '">' + match + '</span>';
+                    });
+                },
+                
+                renderFileTree(node, prefix = '', isLast = true) {
+                    if (!node) return '';
+                    
+                    let html = '';
+                    const connector = isLast ? '└── ' : '├── ';
+                    const nextPrefix = prefix + (isLast ? '    ' : '│   ');
+                    
+                    if (node.type === 'directory') {
+                        html += `<div class="tree-item">
+                            <span class="text-gray-500">${prefix}${connector}</span>
+                            <span class="tree-directory">${node.name}/</span>
+                            <span class="tree-size ml-2">${node.size_str || ''}</span>
+                        </div>`;
+                        
+                        if (node.children) {
+                            node.children.forEach((child, index) => {
+                                const isChildLast = index === node.children.length - 1;
+                                html += this.renderFileTree(child, nextPrefix, isChildLast);
+                            });
+                        }
+                    } else if (node.type === 'file') {
+                        html += `<div class="tree-item">
+                            <span class="text-gray-500">${prefix}${connector}</span>
+                            <span class="tree-file">${node.name}</span>
+                            <span class="tree-size ml-2">${node.size_str || ''}</span>
+                        </div>`;
+                    }
+                    
+                    return html;
+                }
+            }
+        }
+    </script>
+</body>
+</html>
