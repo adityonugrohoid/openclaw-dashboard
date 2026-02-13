@@ -2,9 +2,11 @@
 
 A custom-built observability dashboard for [OpenClaw](https://github.com/openclaw/openclaw) — the autonomous AI agent framework. Provides real-time visibility into agent configuration, sessions, security posture, and system resources through a premium dark-mode interface.
 
-## Screenshots
+![Session Status — Hero metrics and System Overview](screenshots/session-status-top.png)
 
-> Session Status with hero metrics, sectioned System Overview, and active sessions table.
+![Session Status — Runtime, Maintenance, and Active Sessions](screenshots/session-status-bottom.png)
+
+![System Information — Host metrics with CPU, memory, and disk usage](screenshots/system-info.png)
 
 ## Stack
 
@@ -20,8 +22,8 @@ Single-file SPA — no build step, no bundler, no node_modules.
 ## Features
 
 ### Session Status
-- **Hero metric cards** — Model, Thinking Level, Reasoning, Active Sessions
-- **System Overview** — Sectioned list layout (Network · Services · Runtime · Maintenance) with monochrome SVG icons, status pills, and smart data filtering
+- **Hero metric cards** — Model, Thinking Level, Reasoning, Active Sessions with monochrome color system
+- **System Overview** — Sectioned list layout (Network · Services · Runtime · Maintenance) with monochrome SVG icons and status pills
 - **Active Sessions** — Table with token usage progress bars
 - **Channels & Security** — Side-by-side summary cards with colored status indicators
 
@@ -50,7 +52,7 @@ The dashboard automatically hides irrelevant noise from `openclaw status` output
 - Monochrome color system — each card's icon and value share a single static color
 - Custom scrollbar, skeleton loading states, smooth page transitions
 - Responsive sidebar navigation
-- Bound to `127.0.0.1` (localhost only — safe for OKX wallet and other extensions that flag `0.0.0.0`)
+- Bound to `127.0.0.1` (localhost only — safe for extensions that flag `0.0.0.0`)
 
 ## Quick Start
 
@@ -82,10 +84,12 @@ The dashboard reads from:
 
 Update paths in `app.py` if your OpenClaw installation differs.
 
+## Author
+
+**Adityo Nugroho** · [GitHub](https://github.com/adityonugrohoid) · [Portfolio](https://adityonugrohoid.github.io)
+
+Built at **Ratutesla Lab**
+
 ## License
 
 MIT
-
----
-
-**Ratutesla Lab** · OpenClaw Dashboard v2.0
